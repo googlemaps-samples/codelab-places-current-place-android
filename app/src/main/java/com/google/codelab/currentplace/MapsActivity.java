@@ -146,6 +146,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
+        // Enable the zoom controls for the map
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+
         // Prompt the user for permission.
         getLocationPermission();
     }
@@ -345,8 +348,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .snippet(markerSnippet));
 
             // Position the map's camera at the location of the marker.
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng,
-                    DEFAULT_ZOOM));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(markerLatLng));
         }
     };
 
