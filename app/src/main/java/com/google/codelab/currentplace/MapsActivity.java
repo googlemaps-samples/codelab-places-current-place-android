@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -57,7 +58,6 @@ import java.util.List;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-
     // New variables for Current Place Picker
     private static final String TAG = "MapsActivity";
     ListView lstPlaces;
@@ -91,6 +91,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //
+        // PASTE THE LINES BELOW THIS COMMENT
+        //
+
         // Set up the action toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -105,6 +109,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
+    /**
+     * Populates the app bar with the menu.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -112,10 +119,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Handles user clicks on menu items.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+
             case R.id.action_geolocate:
+
+                // COMMENTED OUT UNTIL WE DEFINE THE METHOD
+                // Present the current place picker
                 pickCurrentPlace();
                 return true;
 
@@ -125,32 +139,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return super.onOptionsItemSelected(item);
 
         }
-    }
-
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-        // Enable the zoom controls for the map
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-
-        // Prompt the user for permission.
-        getLocationPermission();
     }
 
     /**
@@ -194,6 +182,107 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+     * we just add a marker near Sydney, Australia.
+     * If Google Play services is not installed on the device, the user will be prompted to install
+     * it inside the SupportMapFragment. This method will only be triggered once the user has
+     * installed Google Play services and returned to the app.
+     */
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Add a marker in Sydney and move the camera
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+        //
+        // PASTE THE LINES BELOW THIS COMMENT
+        //
+
+        // Enable the zoom controls for the map
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+
+        // Prompt the user for permission.
+        getLocationPermission();
+
+    }
+
+    /**
+     * Calls the findCurrentPlace method in Google Maps Platform Places API.
+     * Response contains a list of placeLikelihood objects.
+     * Takes the most likely places and extracts the place details for access in other methods.
+     */
+    private void getCurrentPlaceLikelihoods() {
+        // Use fields to define the data types to return.
+        List<Place.Field> placeFields = Arrays.asList(Place.Field.NAME, Place.Field.ADDRESS,
+                Place.Field.LAT_LNG);
+
+        // Get the likely places - that is, the businesses and other points of interest that
+        // are the best match for the device's current location.
+        @SuppressWarnings("MissingPermission") final FindCurrentPlaceRequest request =
+                FindCurrentPlaceRequest.builder(placeFields).build();
+        Task<FindCurrentPlaceResponse> placeResponse = mPlacesClient.findCurrentPlace(request);
+        placeResponse.addOnCompleteListener(this,
+                new OnCompleteListener<FindCurrentPlaceResponse>() {
+                    @Override
+                    public void onComplete(@NonNull Task<FindCurrentPlaceResponse> task) {
+                        if (task.isSuccessful()) {
+                            FindCurrentPlaceResponse response = task.getResult();
+                            // Set the count, handling cases where less than 5 entries are returned.
+                            int count;
+                            if (response.getPlaceLikelihoods().size() < M_MAX_ENTRIES) {
+                                count = response.getPlaceLikelihoods().size();
+                            } else {
+                                count = M_MAX_ENTRIES;
+                            }
+
+                            int i = 0;
+                            mLikelyPlaceNames = new String[count];
+                            mLikelyPlaceAddresses = new String[count];
+                            mLikelyPlaceAttributions = new String[count];
+                            mLikelyPlaceLatLngs = new LatLng[count];
+
+                            for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
+                                Place currPlace = placeLikelihood.getPlace();
+                                mLikelyPlaceNames[i] = currPlace.getName();
+                                mLikelyPlaceAddresses[i] = currPlace.getAddress();
+                                mLikelyPlaceAttributions[i] = (currPlace.getAttributions() == null) ?
+                                        null : String.join(" ", currPlace.getAttributions());
+                                mLikelyPlaceLatLngs[i] = currPlace.getLatLng();
+
+                                String currLatLng = (mLikelyPlaceLatLngs[i] == null) ?
+                                        "" : mLikelyPlaceLatLngs[i].toString();
+
+                                Log.i(TAG, String.format("Place " + currPlace.getName()
+                                        + " has likelihood: " + placeLikelihood.getLikelihood()
+                                        + " at " + currLatLng));
+
+                                i++;
+                                if (i > (count - 1)) {
+                                    break;
+                                }
+                            }
+
+
+                            // COMMENTED OUT UNTIL WE DEFINE THE METHOD
+                            // Populate the ListView
+                            fillPlacesList();
+                        } else {
+                            Exception exception = task.getException();
+                            if (exception instanceof ApiException) {
+                                ApiException apiException = (ApiException) exception;
+                                Log.e(TAG, "Place not found: " + apiException.getStatusCode());
+                            }
+                        }
+                    }
+                });
+    }
+
+    /**
      * Get the current location of the device, and position the map's camera
      */
     private void getDeviceLocation() {
@@ -230,7 +319,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     /**
      * Fetch a list of likely places, and show the current place on the map - provided the user
      * has granted location permission.
@@ -257,77 +345,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void getCurrentPlaceLikelihoods() {
-        // Use fields to define the data types to return.
-        List<Place.Field> placeFields = Arrays.asList(Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
-
-        // Get the likely places - that is, the businesses and other points of interest that
-        // are the best match for the device's current location.
-        @SuppressWarnings("MissingPermission") final FindCurrentPlaceRequest request =
-                FindCurrentPlaceRequest.builder(placeFields).build();
-        Task<FindCurrentPlaceResponse> placeResponse = mPlacesClient.findCurrentPlace(request);
-        placeResponse.addOnCompleteListener(task -> {
-            if (task.isSuccessful()){
-                FindCurrentPlaceResponse response = task.getResult();
-                // Set the count, handling cases where less than 5 entries are returned.
-                int count;
-                if (response.getPlaceLikelihoods().size() < M_MAX_ENTRIES) {
-                    count = response.getPlaceLikelihoods().size();
-                } else {
-                    count = M_MAX_ENTRIES;
-                }
-
-                int i = 0;
-                mLikelyPlaceNames = new String[count];
-                mLikelyPlaceAddresses = new String[count];
-                mLikelyPlaceAttributions = new String[count];
-                mLikelyPlaceLatLngs = new LatLng[count];
-
-                for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
-                    Place currPlace = placeLikelihood.getPlace();
-                    mLikelyPlaceNames[i] = currPlace.getName();
-                    mLikelyPlaceAddresses[i] = currPlace.getAddress();
-                    mLikelyPlaceAttributions[i] = (currPlace.getAttributions() == null) ?
-                            null : String.join(" ", currPlace.getAttributions());
-                    mLikelyPlaceLatLngs[i] = currPlace.getLatLng();
-
-                    String currLatLng = (mLikelyPlaceLatLngs[i] == null) ?
-                            "" : mLikelyPlaceLatLngs[i].toString();
-
-                    Log.i(TAG, String.format("Place " + currPlace.getName()
-                            + " has likelihood: " + placeLikelihood.getLikelihood()
-                            + " at " + currLatLng));
-
-                    i++;
-                    if (i > (count - 1)) {
-                        break;
-                    }
-                }
-
-                // Populate the ListView
-                fillPlacesList();
-
-            } else {
-                Exception exception = task.getException();
-                if (exception instanceof ApiException) {
-                    ApiException apiException = (ApiException) exception;
-                    Log.e(TAG, "Place not found: " + apiException.getStatusCode());
-                }
-            }
-        });
-    }
-
-    /**
-     * Display a list allowing the user to select a place from a list of likely places.
-     */
-    private void fillPlacesList() {
-        // Set up an ArrayAdapter to convert likely places into TextViews to populate the ListView
-        ArrayAdapter<String> placesAdapter =
-                new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mLikelyPlaceNames);
-        lstPlaces.setAdapter(placesAdapter);
-        lstPlaces.setOnItemClickListener(listClickedHandler);
-    }
-
     /**
      * When user taps an item in the Places list, add a marker to the map with the place details
      */
@@ -351,5 +368,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.moveCamera(CameraUpdateFactory.newLatLng(markerLatLng));
         }
     };
+
+    /**
+     * Display a list allowing the user to select a place from a list of likely places.
+     */
+    private void fillPlacesList() {
+        // Set up an ArrayAdapter to convert likely places into TextViews to populate the ListView
+        ArrayAdapter<String> placesAdapter =
+                new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mLikelyPlaceNames);
+        lstPlaces.setAdapter(placesAdapter);
+        lstPlaces.setOnItemClickListener(listClickedHandler);
+    }
 
 }
