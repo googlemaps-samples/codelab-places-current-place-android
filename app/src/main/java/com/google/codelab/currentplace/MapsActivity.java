@@ -24,6 +24,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -251,7 +252,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 mLikelyPlaceNames[i] = currPlace.getName();
                                 mLikelyPlaceAddresses[i] = currPlace.getAddress();
                                 mLikelyPlaceAttributions[i] = (currPlace.getAttributions() == null) ?
-                                        null : String.join(" ", currPlace.getAttributions());
+                                        null : TextUtils.join(" ", currPlace.getAttributions());
                                 mLikelyPlaceLatLngs[i] = currPlace.getLatLng();
 
                                 String currLatLng = (mLikelyPlaceLatLngs[i] == null) ?
