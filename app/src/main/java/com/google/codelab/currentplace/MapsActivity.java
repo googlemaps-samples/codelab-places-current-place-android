@@ -78,10 +78,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Used for selecting the current place.
     private static final int M_MAX_ENTRIES = 5;
-    private String[] mLikelyPlaceNames;
-    private String[] mLikelyPlaceAddresses;
-    private String[] mLikelyPlaceAttributions;
-    private LatLng[] mLikelyPlaceLatLngs;
+    private Place[] mPlaces;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -228,21 +225,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             int count = Math.min(response.getPlaceLikelihoods().size(), M_MAX_ENTRIES);
 
                             int i = 0;
-                            mLikelyPlaceNames = new String[count];
-                            mLikelyPlaceAddresses = new String[count];
-                            mLikelyPlaceAttributions = new String[count];
-                            mLikelyPlaceLatLngs = new LatLng[count];
+                            mPlaces = new Place[count];
 
                             for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
                                 Place currPlace = placeLikelihood.getPlace();
-                                mLikelyPlaceNames[i] = currPlace.getName();
-                                mLikelyPlaceAddresses[i] = currPlace.getAddress();
-                                mLikelyPlaceAttributions[i] = (currPlace.getAttributions() == null) ?
-                                        null : TextUtils.join(" ", currPlace.getAttributions());
-                                mLikelyPlaceLatLngs[i] = currPlace.getLatLng();
+                                mPlaces[i] = currPlace;
 
-                                String currLatLng = (mLikelyPlaceLatLngs[i] == null) ?
-                                        "" : mLikelyPlaceLatLngs[i].toString();
+                                String currLatLng = (currPlace.getLatLng() == null) ?
+                                        "" : currPlace.getLatLng().toString();
 
                                 Log.i(TAG, "Place " + currPlace.getName()
                                         + " has likelihood: " + placeLikelihood.getLikelihood()
@@ -338,21 +328,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private AdapterView.OnItemClickListener listClickedHandler = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView parent, View v, int position, long id) {
             // position will give us the index of which place was selected in the array
-            LatLng markerLatLng = mLikelyPlaceLatLngs[position];
-            String markerSnippet = mLikelyPlaceAddresses[position];
-            if (mLikelyPlaceAttributions[position] != null) {
-                markerSnippet = markerSnippet + "\n" + mLikelyPlaceAttributions[position];
+            Place place = mPlaces[position];
+            String markerSnippet = place.getAddress();
+            if (place.getAttributions() != null) {
+                markerSnippet += "\n" + TextUtils.join(" ", place.getAttributions());
             }
 
             // Add a marker for the selected place, with an info window
             // showing information about that place.
             mMap.addMarker(new MarkerOptions()
-                    .title(mLikelyPlaceNames[position])
-                    .position(markerLatLng)
-                    .snippet(markerSnippet));
+                .title(place.getName())
+                .position(place.getLatLng())
+                .snippet(markerSnippet));
 
             // Position the map's camera at the location of the marker.
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(markerLatLng));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
         }
     };
 
@@ -361,8 +351,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private void fillPlacesList() {
         // Set up an ArrayAdapter to convert likely places into TextViews to populate the ListView
+        String[] items = new String[mPlaces.length];
+        for (int i = 0; i < mPlaces.length; i++) {
+            items[i] = mPlaces[i].getName();
+        }
         ArrayAdapter<String> placesAdapter =
-            new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mLikelyPlaceNames);
+            new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lstPlaces.setAdapter(placesAdapter);
         lstPlaces.setOnItemClickListener(listClickedHandler);
     }
