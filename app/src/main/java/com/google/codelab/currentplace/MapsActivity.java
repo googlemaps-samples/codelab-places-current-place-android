@@ -15,6 +15,11 @@
 package com.google.codelab.currentplace;
 
 import android.Manifest;
+import android.text.SpannableString;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -47,8 +52,14 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.AutocompletePrediction;
+import com.google.android.libraries.places.api.model.LocationBias;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.PlaceLikelihood;
+import com.google.android.libraries.places.api.net.FetchPlaceRequest;
+import com.google.android.libraries.places.api.net.FetchPlaceResponse;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -113,8 +124,56 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+        final SearchView searchView =
+            (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (TextUtils.isEmpty(query)) {
+                    return false;
+                }
+                getAutoCompleteResults(query);
+                return true;
+            }
 
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void getAutoCompleteResults(String query) {
+        if (!mLocationPermissionGranted) {
+            Log.w(TAG, "Permission is not yet granted.");
+            return;
+        }
+
+        if (mLastKnownLocation == null) {
+            Log.w(TAG, "Last location not known.");
+            return;
+        }
+
+        // Build request
+        FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
+            .setOrigin(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
+            .setQuery(query)
+            .build();
+        Task<FindAutocompletePredictionsResponse> task = mPlacesClient.findAutocompletePredictions(request);
+        task.addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<FindAutocompletePredictionsResponse> task) {
+                FindAutocompletePredictionsResponse response = task.getResult();
+                if (!task.isSuccessful() || response == null) {
+                    Log.w(TAG, "Could not fetch predictions.");
+                    return;
+                }
+
+                List<AutocompletePrediction> predictions = response.getAutocompletePredictions();
+                fillPredictionsList(predictions);
+            }
+        });
     }
 
     /**
@@ -198,6 +257,52 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Prompt the user for permission.
         getLocationPermission();
 
+    }
+
+    private void fillPredictionsList(final List<AutocompletePrediction> predictions) {
+        SpannableString[] items = new SpannableString[predictions.size()];
+        for (int i = 0; i < items.length; i++) {
+            items[i] = predictions.get(i).getPrimaryText(null);
+        }
+        ArrayAdapter<SpannableString> placesAdapter =
+            new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
+        lstPlaces.setAdapter(placesAdapter);
+        lstPlaces.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                AutocompletePrediction prediction = predictions.get(position);
+                displayMarker(prediction);
+            }
+        });
+    }
+
+    private void displayMarker(final AutocompletePrediction prediction) {
+        String placeId = prediction.getPlaceId();
+        List<Place.Field> placeFields = Arrays.asList(Place.Field.NAME, Place.Field.LAT_LNG);
+        FetchPlaceRequest request = FetchPlaceRequest.builder(placeId, placeFields).build();
+        Task<FetchPlaceResponse> response = mPlacesClient.fetchPlace(request);
+        response.addOnCompleteListener(new OnCompleteListener<FetchPlaceResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<FetchPlaceResponse> task) {
+                FetchPlaceResponse placeResponse = task.getResult();
+                if (!task.isSuccessful() || placeResponse == null) {
+                    Log.w(TAG, "Could not fetch place.");
+                    return;
+                }
+
+                Place place = placeResponse.getPlace();
+
+                // Add a marker for the selected place, with an info window
+                // showing information about that place.
+                mMap.addMarker(new MarkerOptions()
+                    .title(place.getName())
+                    .position(place.getLatLng())
+                    .snippet(prediction.getSecondaryText(null).toString()));
+
+                // Position the map's camera at the location of the marker.
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+            }
+        });
     }
 
     /**
