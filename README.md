@@ -1,29 +1,55 @@
-Current Place Picker for Android
-============
-This is sample code to accompany the [Build Your Own Current Place Picker for Android](https://codelabs.developers.google.com/codelabs/location-places-android/index.html) codelab.
+![GitHub contributors](https://img.shields.io/github/contributors/googlemaps-samples/codelab-places-current-place-android?color=green)
+[![GitHub License](https://img.shields.io/github/license/googlemaps-samples/codelab-places-current-place-android?color=blue)][license]
+[![StackOverflow](https://img.shields.io/stackexchange/stackoverflow/t/google-maps?color=orange&label=google-maps&logo=stackoverflow)](https://stackoverflow.com/questions/tagged/google-maps)
+[![Discord](https://img.shields.io/discord/676948200904589322?color=6A7EC2&logo=discord&logoColor=ffffff)][Discord server]
 
-Support
--------
-If you've found an error in this sample, please file an issue:
-https://github.com/googlecodelabs/current-place-picker-android/issues.
-Patches are encouraged, and may be submitted by forking this project and
-submitting a pull request through GitHub.
+# Current Place Picker for Android Codelab
 
-License
--------
-Copyright 2019 Google LLC
+## Description
 
-Licensed to the Apache Software Foundation (ASF) under one or more contributor
-license agreements.  See the NOTICE file distributed with this work for
-additional information regarding copyright ownership.  The ASF licenses this
-file to you under the Apache License, Version 2.0 (the "License"); you may not
-use this file except in compliance with the License.  You may obtain a copy of
-the License at
+This is sample code to accompany the [Build Your Own Current Place Picker for Android][codelab] codelab.
 
-  http://www.apache.org/licenses/LICENSE-2.0
+## Requirements
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-License for the specific language governing permissions and limitations under
-the License.
+To run the samples, you will need:
+
+- To [sign up with Google Maps Platform]
+- A Google Maps Platform [project] with the **PRODUCT** enabled
+- An [API key] associated with the project above ... follow the [API key instructions] if you're new to the process
+
+## Contributing
+
+Contributions are welcome and encouraged! If you'd like to contribute, send us a [pull request] and refer to our [code of conduct] and [contributing guide].
+
+## Terms of Service
+
+This sample uses Google Maps Platform services. Use of Google Maps Platform services through this sample is subject to the Google Maps Platform [Terms of Service].
+
+This sample is not a Google Maps Platform Core Service. Therefore, the Google Maps Platform Terms of Service (e.g. Technical Support Services, Service Level Agreements, and Deprecation Policy) do not apply to the code in this sample.
+
+## Support
+
+This sample is offered via an open source [license]. It is not governed by the Google Maps Platform Support [Technical Support Services Guidelines], the [SLA], or the [Deprecation Policy]. However, any Google Maps Platform services used by the sample remain subject to the Google Maps Platform Terms of Service.
+
+If you find a bug, or have a feature request, please [file an issue] on GitHub. If you would like to get answers to technical questions from other Google Maps Platform developers, ask through one of our [developer community channels]. If you'd like to contribute, please check the [contributing guide].
+
+You can also discuss this sample on our [Discord server].
+
+[codelab]: https://codelabs.developers.google.com/codelabs/location-places-android
+[PRODUCT]: https://developers.google.com/maps/documentation/PRODUCT
+[API key]: https://developers.google.com/maps/documentation/PRODUCT/get-api-key
+[API key instructions]: https://developers.google.com/maps/documentation/PRODUCT/config#step_3_add_your_api_key_to_the_project
+
+[code of conduct]: ?tab=coc-ov-file#readme
+[contributing guide]: CONTRIBUTING.md
+[Deprecation Policy]: https://cloud.google.com/maps-platform/terms
+[developer community channels]: https://developers.google.com/maps/developer-community
+[Discord server]: https://discord.gg/hYsWbmk
+[file an issue]: https://github.com/googlemaps-samples/codelab-places-current-place-android/issues/new/choose
+[license]: LICENSE
+[pull request]: https://github.com/googlemaps-samples/codelab-places-current-place-android/compare
+[project]: https://developers.google.com/maps/documentation/PRODUCT/cloud-setup#enabling-apis
+[Sign up with Google Maps Platform]: https://console.cloud.google.com/google/maps-apis/start
+[SLA]: https://cloud.google.com/maps-platform/terms/sla
+[Technical Support Services Guidelines]: https://cloud.google.com/maps-platform/terms/tssg
+[Terms of Service]: https://cloud.google.com/maps-platform/terms
